@@ -6,51 +6,98 @@
 /*   By: msawada <msawada@student.42tokyo.jp>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/25 20:25:08 by msawada           #+#    #+#             */
-/*   Updated: 2024/05/30 18:02:00 by msawada          ###   ########.fr       */
+/*   Updated: 2024/06/02 20:25:14 by msawada          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 #include <stdio.h>
 
+char	*add_char(char *line, char c, int line_size)
+{
+	int		i;
+	char	*new_line;
+
+	new_line = (char *)malloc(sizeof(char) * line_size);
+	if (new_line == NULL)
+		return (NULL);
+	i = 0;
+	while (i < line_size - 2)
+	{
+		new_line[i] = line[i];
+		i ++;
+	}
+	new_line[i] = c;
+	i ++;
+	new_line[i] = '\0';
+	free (line);
+	return (new_line);
+}
+
+// ここの関数がTIMEOUTの原因
 char	get_char(int fd)
 {
 	static char	buf[BUFFER_SIZE];
+	static char	*bufcpy;
 	static int	buf_count;
 	char		c;
 
+	c = '\0';
 	if (buf_count  == 0)
 	{
 		buf_count = read(fd, buf, BUFFER_SIZE);
+		bufcpy = buf;
 	}
 	buf_count -= 1;
-	if(buf_count > 0)
+	if(buf_count >= 0)
 	{
-		c = buf[BUFFER_SIZE - buf_count - 1];
+		c = *bufcpy;
+		bufcpy ++;
 	}
 	else if (buf_count == -1)
 		c = EOF;
 	return (c);
 }
+// この関数にすると解決する
+static char	ft_getchar(int fd)
+{
+	static char	buf[BUFFER_SIZE];
+	static char	*ptr;
+	static int	read_byte;
+
+	if (read_byte == 0)
+	{
+		read_byte = read(fd, buf, BUFFER_SIZE);
+		if (read_byte < 0)
+			return (FALSE);
+		ptr = buf;
+	}
+	if (--read_byte >= 0)
+		return ((char)*(ptr++));
+	else
+		return (EOF);
+}
+
 
 char	*get_next_line(int fd)
 {
 	char	*line;
 	char	c;
+	int		line_size;
 
+	line = NULL;
+	line_size = 1;
 	while (1)
 	{
 		c = get_char(fd);
 		if (c == EOF)
 			break;
-		add_char(&line, c);
+		line = add_char(line, c, ++line_size);
 		if (c == '\n')
 			break;
 	}
-	add_end(&line);
 	return (line);
 }
-
 
 // int	main(void)
 // {
