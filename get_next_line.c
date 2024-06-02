@@ -6,7 +6,7 @@
 /*   By: msawada <msawada@student.42tokyo.jp>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/25 20:25:08 by msawada           #+#    #+#             */
-/*   Updated: 2024/06/02 20:25:14 by msawada          ###   ########.fr       */
+/*   Updated: 2024/06/02 20:46:42 by msawada          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,15 +34,12 @@ char	*add_char(char *line, char c, int line_size)
 	return (new_line);
 }
 
-// ここの関数がTIMEOUTの原因
-char	get_char(int fd)
+static char	get_char(int fd)
 {
 	static char	buf[BUFFER_SIZE];
 	static char	*bufcpy;
 	static int	buf_count;
-	char		c;
 
-	c = '\0';
 	if (buf_count  == 0)
 	{
 		buf_count = read(fd, buf, BUFFER_SIZE);
@@ -51,33 +48,11 @@ char	get_char(int fd)
 	buf_count -= 1;
 	if(buf_count >= 0)
 	{
-		c = *bufcpy;
-		bufcpy ++;
+		return (*(bufcpy++));
 	}
-	else if (buf_count == -1)
-		c = EOF;
-	return (c);
-}
-// この関数にすると解決する
-static char	ft_getchar(int fd)
-{
-	static char	buf[BUFFER_SIZE];
-	static char	*ptr;
-	static int	read_byte;
-
-	if (read_byte == 0)
-	{
-		read_byte = read(fd, buf, BUFFER_SIZE);
-		if (read_byte < 0)
-			return (FALSE);
-		ptr = buf;
-	}
-	if (--read_byte >= 0)
-		return ((char)*(ptr++));
 	else
 		return (EOF);
 }
-
 
 char	*get_next_line(int fd)
 {
